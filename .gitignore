@@ -1,0 +1,35 @@
+# Node
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Prisma
+backend/prisma/dev.db
+
+# Docker
+docker-data/
+
+# Misc
+*.tsbuildinfo
