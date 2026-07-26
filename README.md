@@ -154,6 +154,45 @@ SupplyFlow/
 └── docs/       # Design and product documentation
 ```
 
+## Getting Started
+
+### Option 1: Docker Compose (recommended)
+
+Runs Postgres (with `pgvector`), the backend, and the frontend together, with hot reload on both services.
+
+```bash
+cp .env.example .env
+docker compose up
+```
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:4000
+
+On first run, apply the Prisma schema against the containerized database:
+
+```bash
+docker compose exec backend npx prisma migrate dev
+```
+
+### Option 2: Run services locally
+
+Requires a local PostgreSQL instance with the `pgvector` extension available.
+
+```bash
+# Backend
+cd backend
+cp .env.example .env   # point DATABASE_URL at your local Postgres
+npm install
+npx prisma migrate dev
+npm run dev             # http://localhost:4000
+
+# Frontend (separate terminal)
+cd frontend
+cp .env.example .env
+npm install
+npm run dev             # http://localhost:3000
+```
+
 ## License
 
 TBD
