@@ -1,20 +1,24 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
+import cookie from "@fastify/cookie";
 import type { Env } from "./shared/config/env.js";
 import { loggerOptions } from "./shared/logger/index.js";
 import { registerErrorHandler } from "./plugins/error-handler.js";
+import { registerAuthModule } from "./modules/auth/presentation/auth.routes.js";
 
 // Module route registration is added here one module at a time as each
-// vertical slice (auth, inventory, suppliers, ...) is built. Empty for now —
-// this is scaffolding, not feature code.
+// vertical slice (auth, inventory, suppliers, ...) is built.
 export function buildApp(env: Env): FastifyInstance {
   const app = Fastify({ logger: loggerOptions(env.NODE_ENV) });
 
   app.register(cors, { origin: env.CORS_ORIGIN, credentials: true });
+  app.register(cookie);
 
   registerErrorHandler(app);
 
   app.get("/health", async () => ({ status: "ok" }));
+
+  registerAuthModule(app, env);
 
   return app;
 }
