@@ -1,7 +1,7 @@
-// Sprint 0 scaffolding: only Organization + User are modeled so the Auth
-// module (the first vertical slice to be built) has a real schema to work
-// against. Product, Supplier, Document, PurchaseOrder, etc. are added
-// module-by-module — see docs/architecture.md section 8.
+// Sprint 0 scaffolding: models are added module-by-module as each vertical
+// slice is built — see docs/architecture.md section 8. Auth (Organization,
+// User) and Inventory (Product, StockMovement) exist so far; Supplier,
+// Document, PurchaseOrder, etc. follow as their modules are built.
 
 generator client {
   provider        = "prisma-client-js"
@@ -25,7 +25,8 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users User[]
+  users    User[]
+  products Product[]
 
   @@map("organizations")
 }
@@ -46,4 +47,41 @@ model User {
   @@unique([organizationId, email])
   @@index([organizationId])
   @@map("users")
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  organizationId  String   @map("organization_id")
+  name            String
+  sku             String
+  quantity        Int      @default(0)
+  safetyThreshold Int      @default(0) @map("safety_threshold")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  stockMovements StockMovement[]
+
+  // SKU is unique per tenant, not globally.
+  @@unique([organizationId, sku])
+  @@index([organizationId])
+  @@map("products")
+}
+
+model StockMovement {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  productId      String   @map("product_id")
+  // Signed change applied to Product.quantity (positive = stock in,
+  // negative = stock out); the audit trail is this row, quantity itself
+  // lives only on Product.
+  delta          Int
+  reason         String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([organizationId])
+  @@index([productId, createdAt])
+  @@map("stock_movements")
 }

@@ -5,6 +5,7 @@ import type { Env } from "./shared/config/env.js";
 import { loggerOptions } from "./shared/logger/index.js";
 import { registerErrorHandler } from "./plugins/error-handler.js";
 import { registerAuthModule } from "./modules/auth/presentation/auth.routes.js";
+import { registerInventoryModule } from "./modules/inventory/presentation/inventory.routes.js";
 
 // Module route registration is added here one module at a time as each
 // vertical slice (auth, inventory, suppliers, ...) is built.
@@ -19,6 +20,7 @@ export function buildApp(env: Env): FastifyInstance {
   app.get("/health", async () => ({ status: "ok" }));
 
   registerAuthModule(app, env);
+  registerInventoryModule(app, env);
 
   return app;
 }
