@@ -1,7 +1,8 @@
 // Sprint 0 scaffolding: models are added module-by-module as each vertical
 // slice is built — see docs/architecture.md section 8. Auth (Organization,
-// User) and Inventory (Product, StockMovement) exist so far; Supplier,
-// Document, PurchaseOrder, etc. follow as their modules are built.
+// User), Inventory (Product, StockMovement), and Suppliers (Supplier,
+// SupplierProduct) exist so far; Document, PurchaseOrder, etc. follow as
+// their modules are built.
 
 generator client {
   provider        = "prisma-client-js"
@@ -25,8 +26,9 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users    User[]
-  products Product[]
+  users     User[]
+  products  Product[]
+  suppliers Supplier[]
 
   @@map("organizations")
 }
@@ -59,8 +61,9 @@ model Product {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  organization   Organization    @relation(fields: [organizationId], references: [id])
-  stockMovements StockMovement[]
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+  stockMovements   StockMovement[]
+  supplierProducts SupplierProduct[]
 
   // SKU is unique per tenant, not globally.
   @@unique([organizationId, sku])
@@ -84,4 +87,45 @@ model StockMovement {
   @@index([organizationId])
   @@index([productId, createdAt])
   @@map("stock_movements")
+}
+
+model Supplier {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  contactEmail   String?  @map("contact_email")
+  contactPhone   String?  @map("contact_phone")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+  supplierProducts SupplierProduct[]
+
+  @@index([organizationId])
+  @@map("suppliers")
+}
+
+// Structured contract terms per supplier x product — what the deterministic
+// supplier-ranking rule reads (docs/architecture.md §8/§9b). One row per
+// (supplier, product) pair.
+model SupplierProduct {
+  id               String   @id @default(uuid())
+  organizationId   String   @map("organization_id")
+  supplierId       String   @map("supplier_id")
+  productId        String   @map("product_id")
+  price            Float
+  leadTimeDays     Int      @map("lead_time_days")
+  minOrderQty      Int      @map("min_order_qty")
+  // 0-100 — higher is better.
+  reliabilityScore Float    @map("reliability_score")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@unique([supplierId, productId])
+  @@index([organizationId])
+  @@index([productId])
+  @@map("supplier_products")
 }
