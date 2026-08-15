@@ -40,6 +40,10 @@ export interface SuppliersRepository {
 
   createSupplierProduct(input: CreateSupplierProductInput): Promise<SupplierProduct>;
   listSupplierProducts(supplierId: string, organizationId: string): Promise<SupplierProduct[]>;
+  // Opposite lookup direction from listSupplierProducts — every supplier's
+  // terms for one product, across suppliers. Used by Procurement's
+  // deterministic ranking rule (docs/architecture.md §9b).
+  listSupplierProductsByProduct(productId: string, organizationId: string): Promise<SupplierProduct[]>;
   findSupplierProductById(id: string, organizationId: string): Promise<SupplierProduct | null>;
   updateSupplierProduct(
     id: string,

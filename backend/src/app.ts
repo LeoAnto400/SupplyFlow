@@ -9,6 +9,7 @@ import { registerAuthModule } from "./modules/auth/presentation/auth.routes.js";
 import { registerInventoryModule } from "./modules/inventory/presentation/inventory.routes.js";
 import { registerSuppliersModule } from "./modules/suppliers/presentation/suppliers.routes.js";
 import { registerNotificationsModule } from "./modules/notifications/presentation/notifications.routes.js";
+import { registerProcurementModule } from "./modules/procurement/presentation/procurement.routes.js";
 
 // Module route registration is added here one module at a time as each
 // vertical slice (auth, inventory, suppliers, ...) is built.
@@ -30,6 +31,7 @@ export function buildApp(env: Env): FastifyInstance {
   registerInventoryModule(app, env);
   registerSuppliersModule(app, env);
   registerNotificationsModule(app, env, realtimeGateway);
+  registerProcurementModule(app, env);
 
   return app;
 }

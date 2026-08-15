@@ -1,8 +1,9 @@
 // Sprint 0 scaffolding: models are added module-by-module as each vertical
 // slice is built — see docs/architecture.md section 8. Auth (Organization,
 // User), Inventory (Product, StockMovement), Suppliers (Supplier,
-// SupplierProduct), and Notifications (Notification, ActivityLog) exist so
-// far; Document, PurchaseOrder, etc. follow as their modules are built.
+// SupplierProduct), Notifications (Notification, ActivityLog), and
+// Procurement (PurchaseOrder, PurchaseOrderItem) exist so far; Document
+// follows once its module is built.
 
 generator client {
   provider        = "prisma-client-js"
@@ -20,17 +21,23 @@ enum Role {
   manager
 }
 
+enum PurchaseOrderStatus {
+  draft
+  approved
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users         User[]
-  products      Product[]
-  suppliers     Supplier[]
-  notifications Notification[]
-  activityLogs  ActivityLog[]
+  users          User[]
+  products       Product[]
+  suppliers      Supplier[]
+  notifications  Notification[]
+  activityLogs   ActivityLog[]
+  purchaseOrders PurchaseOrder[]
 
   @@map("organizations")
 }
@@ -63,9 +70,10 @@ model Product {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  organization     Organization      @relation(fields: [organizationId], references: [id])
-  stockMovements   StockMovement[]
-  supplierProducts SupplierProduct[]
+  organization       Organization        @relation(fields: [organizationId], references: [id])
+  stockMovements     StockMovement[]
+  supplierProducts   SupplierProduct[]
+  purchaseOrderItems PurchaseOrderItem[]
 
   // SKU is unique per tenant, not globally.
   @@unique([organizationId, sku])
@@ -102,6 +110,7 @@ model Supplier {
 
   organization     Organization      @relation(fields: [organizationId], references: [id])
   supplierProducts SupplierProduct[]
+  purchaseOrders   PurchaseOrder[]
 
   @@index([organizationId])
   @@map("suppliers")
@@ -162,4 +171,43 @@ model ActivityLog {
 
   @@index([organizationId, createdAt])
   @@map("activity_logs")
+}
+
+// Draft/approved order — the terminal artifact of the core workflow in
+// README.md. Human-in-the-loop: created as a draft, only becomes official
+// once a manager approves it.
+model PurchaseOrder {
+  id               String              @id @default(uuid())
+  organizationId   String              @map("organization_id")
+  supplierId       String              @map("supplier_id")
+  status           PurchaseOrderStatus @default(draft)
+  notes            String?
+  approvedByUserId String?             @map("approved_by_user_id")
+  approvedAt       DateTime?           @map("approved_at")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  organization Organization        @relation(fields: [organizationId], references: [id])
+  supplier     Supplier            @relation(fields: [supplierId], references: [id])
+  items        PurchaseOrderItem[]
+
+  @@index([organizationId, createdAt])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id              String   @id @default(uuid())
+  organizationId  String   @map("organization_id")
+  purchaseOrderId String   @map("purchase_order_id")
+  productId       String   @map("product_id")
+  quantity        Int
+  unitPrice       Float    @map("unit_price")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+
+  @@index([organizationId])
+  @@index([purchaseOrderId])
+  @@map("purchase_order_items")
 }

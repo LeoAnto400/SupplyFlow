@@ -83,6 +83,13 @@ export class PrismaSuppliersRepository implements SuppliersRepository {
     });
   }
 
+  listSupplierProductsByProduct(productId: string, organizationId: string): Promise<SupplierProduct[]> {
+    return this.prisma.supplierProduct.findMany({
+      where: { productId, organizationId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   findSupplierProductById(id: string, organizationId: string): Promise<SupplierProduct | null> {
     return this.prisma.supplierProduct.findFirst({ where: { id, organizationId } });
   }
