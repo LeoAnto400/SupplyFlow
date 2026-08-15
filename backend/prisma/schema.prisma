@@ -1,8 +1,8 @@
 // Sprint 0 scaffolding: models are added module-by-module as each vertical
 // slice is built — see docs/architecture.md section 8. Auth (Organization,
-// User), Inventory (Product, StockMovement), and Suppliers (Supplier,
-// SupplierProduct) exist so far; Document, PurchaseOrder, etc. follow as
-// their modules are built.
+// User), Inventory (Product, StockMovement), Suppliers (Supplier,
+// SupplierProduct), and Notifications (Notification, ActivityLog) exist so
+// far; Document, PurchaseOrder, etc. follow as their modules are built.
 
 generator client {
   provider        = "prisma-client-js"
@@ -26,9 +26,11 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  products  Product[]
-  suppliers Supplier[]
+  users         User[]
+  products      Product[]
+  suppliers     Supplier[]
+  notifications Notification[]
+  activityLogs  ActivityLog[]
 
   @@map("organizations")
 }
@@ -128,4 +130,36 @@ model SupplierProduct {
   @@index([organizationId])
   @@index([productId])
   @@map("supplier_products")
+}
+
+// Persisted, per-user-facing record of a domain event (e.g. low stock) —
+// what drives the toast/badge in the dashboard. See docs/architecture.md §5.
+model Notification {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  type           String
+  message        String
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@map("notifications")
+}
+
+// Historical record of everything that happened in an organization — powers
+// the activity feed. Always written alongside a Notification for the same
+// event, but kept as its own append-only table (no `read` state).
+model ActivityLog {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  type           String
+  message        String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@map("activity_logs")
 }
