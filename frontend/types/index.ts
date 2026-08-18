@@ -18,18 +18,21 @@ export interface User {
 
 export interface Product {
   id: string;
-  organizationId: string;
   sku: string;
   name: string;
   quantity: number;
   safetyThreshold: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface StockMovement {
   id: string;
   productId: string;
-  quantity: number;
-  reason: string;
+  // Signed change applied to Product.quantity — positive is stock in,
+  // negative is stock out.
+  delta: number;
+  reason: string | null;
   createdAt: string;
 }
 
