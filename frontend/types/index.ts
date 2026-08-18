@@ -38,8 +38,11 @@ export interface StockMovement {
 
 export interface Supplier {
   id: string;
-  organizationId: string;
   name: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SupplierProduct {
@@ -48,8 +51,11 @@ export interface SupplierProduct {
   productId: string;
   price: number;
   leadTimeDays: number;
-  minOrderQuantity: number;
+  minOrderQty: number;
+  // 0-100 — higher is better.
   reliabilityScore: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DocumentAsset {
